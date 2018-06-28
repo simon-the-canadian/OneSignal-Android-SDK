@@ -79,19 +79,22 @@ class OneSignalPrefs {
         initializePool();
     }
 
-    public static class WritePrefHandlerThread extends HandlerThread {
+    public static class WritePrefHandlerThread extends HandlerThread
+    {
         public Handler mHandler;
 
         private static final int WRITE_CALL_DELAY_TO_BUFFER_MS = 200;
         private long lastSyncTime = 0L;
 
-        WritePrefHandlerThread() {
+        WritePrefHandlerThread()
+        {
             super("OSH_WritePrefs");
             start();
             mHandler = new Handler(getLooper());
         }
 
-        void startDelayedWrite() {
+        void startDelayedWrite()
+        {
             synchronized (mHandler) {
                 mHandler.removeCallbacksAndMessages(null);
                 if (lastSyncTime == 0)
@@ -103,16 +106,23 @@ class OneSignalPrefs {
             }
         }
 
-        private Runnable getNewRunnable() {
-            return new Runnable() {
+        private Runnable getNewRunnable()
+        {
+            return new Runnable()
+            {
                 @Override
-                public void run() {
+                public void run()
+                {
                     flushBufferToDisk();
                 }
             };
         }
 
         private void flushBufferToDisk() {
+            // A flush will be triggered later once a context via OneSignal.setAppContext(...)
+            if (OneSignal.appContext == null)
+                return;
+
             for (String pref : prefsToApply.keySet()) {
                 SharedPreferences prefsToWrite = getSharedPrefsByName(pref);
                 if (prefsToWrite != null) {
@@ -122,18 +132,19 @@ class OneSignalPrefs {
                         for (String key : prefHash.keySet()) {
                             Object value = prefHash.get(key);
                             if (value instanceof String)
-                                editor.putString(key, (String)value);
+                                editor.putString(key, (String) value);
                             else if (value instanceof Boolean)
-                                editor.putBoolean(key, (Boolean)value);
+                                editor.putBoolean(key, (Boolean) value);
                             else if (value instanceof Integer)
-                                editor.putInt(key, (Integer)value);
+                                editor.putInt(key, (Integer) value);
                             else if (value instanceof Long)
-                                editor.putLong(key, (Long)value);
+                                editor.putLong(key, (Long) value);
                         }
                         prefHash.clear();
                     }
                     editor.apply();
                 }
+            }
 
             lastSyncTime = System.currentTimeMillis();
         }
